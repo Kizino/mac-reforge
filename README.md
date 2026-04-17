@@ -342,7 +342,7 @@ The script opens System Settings automatically and waits for you to confirm befo
 
 1. Closes System Preferences (prevents it overriding settings mid-run)
 2. Prompts for `sudo` once upfront
-3. Installs **Xcode Command Line Tools** if missing
+3. Installs **Xcode Command Line Tools** if missing; updates them if a newer version is available
 4. Installs **Homebrew** if missing
 5. `brew update` → `brew upgrade`
 6. Installs all CLI tools (formulae)

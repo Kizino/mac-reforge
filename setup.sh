@@ -135,11 +135,27 @@ load_brew() {
 }
 
 ensure_command_line_tools() {
-  xcode-select -p >/dev/null 2>&1 && return 0
-  log "Installing Xcode Command Line Tools..."
-  run xcode-select --install
-  echo "Finish the CLT installation popup, then rerun this script." >&2
-  exit 1
+  if ! xcode-select -p >/dev/null 2>&1; then
+    log "Installing Xcode Command Line Tools..."
+    run xcode-select --install
+    echo "Finish the CLT installation popup, then rerun this script." >&2
+    exit 1
+  fi
+
+  # Check for and apply any available CLT update (e.g. Xcode 26.x → 26.x.1).
+  # softwareupdate --list can take ~30 s — this is intentional.
+  log "Checking for Xcode Command Line Tools updates (this may take a moment)..."
+  local clt_label
+  clt_label=$(softwareupdate --list 2>/dev/null \
+    | grep -i "label:.*command line tools" \
+    | sed 's/.*Label: //' \
+    | head -1)
+  if [[ -n "$clt_label" ]]; then
+    log "Updating Command Line Tools: $clt_label"
+    run sudo softwareupdate --install "$clt_label" --verbose
+  else
+    log "Command Line Tools are up to date."
+  fi
 }
 
 ensure_homebrew() {
