@@ -476,12 +476,27 @@ install_obsidian_skills() {
   if [[ -d "$dest/.git" ]]; then
     log "Obsidian skills already installed — pulling latest..."
     run git -C "$dest" pull --ff-only
-    return 0
+  else
+    log "Installing Obsidian skills for Copilot CLI..."
+    run mkdir -p "$HOME/.copilot/skills"
+    run git clone https://github.com/kepano/obsidian-skills.git "$dest"
   fi
 
-  log "Installing Obsidian skills for Copilot CLI..."
-  run mkdir -p "$HOME/.copilot/skills"
-  run git clone https://github.com/kepano/obsidian-skills.git "$dest"
+  # Copilot CLI expects skills at the flat level ~/.copilot/skills/<skill-name>/
+  # The repo nests them under obsidian-skills/skills/ — create symlinks to fix that.
+  log "Linking Obsidian skills into ~/.copilot/skills/..."
+  local skills_root="$HOME/.copilot/skills"
+  for skill_dir in "$dest/skills"/*/; do
+    local skill_name
+    skill_name=$(basename "$skill_dir")
+    local link="$skills_root/$skill_name"
+    if [[ ! -e "$link" ]]; then
+      run ln -s "$skill_dir" "$link"
+      log "  Linked: $skill_name"
+    else
+      log "  Already exists: $skill_name"
+    fi
+  done
 }
 
 install_claude_code() {
