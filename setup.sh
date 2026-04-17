@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ##############################################################################
 #
-#  mac-rebuild — New Mac installer
+#  mac-reforge — New Mac installer
 #
 #  Usage:
 #    ./setup.sh            install everything
@@ -13,7 +13,8 @@
 #    2. Utilities            — log(), run(), run_soft()
 #    3. Homebrew             — helpers, prerequisites, install functions
 #    4. Shell Setup          — Oh My Zsh, Powerlevel10k, zsh plugins, .zshrc aliases
-#    5. Developer Tools      — git, VS Code extensions, SSH key, Firefox extensions, dev folder
+#    5. Developer Tools      — git, VS Code extensions, SSH key, Firefox extensions,
+#                              dev folder, AI skills dirs, Claude Code
 #    6. macOS Preferences    — Computer Name, Finder, Dock, Keyboard, Screen, System,
 #                              Power, Mail, Safari, Spotlight, Transmission
 #    7. Security             — Gatekeeper
@@ -40,23 +41,24 @@ DEFAULT_CASKS=(
 )
 
 DEFAULT_FORMULAE=(
-  git        # Latest version of Git
-  python     # Python 3 + pip3
-  wget       # File downloader
-  jq         # JSON parser for the terminal
-  tree       # Display folder structure as a tree
-  htop       # Interactive process monitor
-  btop       # Modern resource monitor
-  ncdu       # Disk usage visualizer
-  kubectl    # Kubernetes CLI
-  zoxide     # Smarter cd — jumps to frequent directories
-  fastfetch  # Fast system info display (shown at shell startup)
-  eza        # Modern ls replacement with icons and git status
-  gh         # GitHub CLI — create PRs, manage issues, clone repos
   bat        # Better cat — syntax highlighting, line numbers, git diff
-  uv         # Extremely fast Python package installer and resolver (replaces pip/venv)
-  ripgrep    # Extremely fast grep replacement (rg)
+  btop       # Modern resource monitor
+  eza        # Modern ls replacement with icons and git status
+  fastfetch  # Fast system info display (shown at shell startup)
   fzf        # Fuzzy finder for the terminal
+  gh         # GitHub CLI — create PRs, manage issues, clone repos
+  git        # Latest version of Git
+  htop       # Interactive process monitor
+  jq         # JSON parser for the terminal
+  kubectl    # Kubernetes CLI
+  ncdu       # Disk usage visualizer
+  node       # Node.js runtime + npm (required for Claude Code and JS tooling)
+  python     # Python 3 + pip3
+  ripgrep    # Extremely fast grep replacement (rg)
+  tree       # Display folder structure as a tree
+  uv         # Extremely fast Python package installer and resolver (replaces pip/venv)
+  wget       # File downloader
+  zoxide     # Smarter cd — jumps to frequent directories
 )
 
 VSCODE_EXTENSIONS=(
@@ -235,7 +237,7 @@ configure_oh_my_zsh() {
   # Add p10k config source line to .zshrc
   local p10k_line='[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh'
   grep -qF "$p10k_line" "$zshrc" 2>/dev/null || \
-    printf '\n# Powerlevel10k config (added by mac-rebuild)\n%s\n' "$p10k_line" >> "$zshrc"
+    printf '\n# Powerlevel10k config (added by mac-reforge)\n%s\n' "$p10k_line" >> "$zshrc"
 
   log "Oh My Zsh + Powerlevel10k ready. Open a new terminal to see your prompt."
 }
@@ -246,7 +248,7 @@ configure_zshrc() {
   # ── fastfetch (must run BEFORE p10k instant prompt preamble)
   # p10k warns about console I/O that happens after its preamble is sourced.
   # Running fastfetch before the preamble is the recommended fix per p10k docs.
-  local fastfetch_marker='# fastfetch — system info at shell startup (added by mac-rebuild)'
+  local fastfetch_marker='# fastfetch — system info at shell startup (added by mac-reforge)'
   if grep -qE '^fastfetch$' "$zshrc" 2>/dev/null; then
     log "fastfetch already in ~/.zshrc."
   else
@@ -267,14 +269,14 @@ configure_zshrc() {
   fi
 
   # ── Shell aliases
-  local alias_marker='# Shell aliases (added by mac-rebuild)'
+  local alias_marker='# Shell aliases (added by mac-reforge)'
   if grep -qF "$alias_marker" "$zshrc" 2>/dev/null; then
     log "Shell aliases already in ~/.zshrc."
   else
     log "Adding shell aliases to ~/.zshrc..."
     cat >> "$zshrc" << 'EOF'
 
-# Shell aliases (added by mac-rebuild)
+# Shell aliases (added by mac-reforge)
 alias ls='eza -alh --icons --git'   # modern ls: icons, human sizes, git status
 alias ..='cd ..'
 alias ...='cd ../..'
@@ -303,11 +305,11 @@ EOF
     log "zoxide already in ~/.zshrc."
   else
     log "Adding zoxide to ~/.zshrc..."
-    printf '\n# zoxide — smarter cd (added by mac-rebuild)\neval "$(zoxide init zsh)"\n' >> "$zshrc"
+    printf '\n# zoxide — smarter cd (added by mac-reforge)\neval "$(zoxide init zsh)"\n' >> "$zshrc"
   fi
 
   # ── fzf shell keybindings (Ctrl+R history, Ctrl+T file search, Alt+C cd)
-  local fzf_marker='# fzf keybindings (added by mac-rebuild)'
+  local fzf_marker='# fzf keybindings (added by mac-reforge)'
   if grep -qF "$fzf_marker" "$zshrc" 2>/dev/null; then
     log "fzf keybindings already in ~/.zshrc."
   else
@@ -426,12 +428,24 @@ install_firefox_extensions() {
 
   local ext_dir="$profile_dir/extensions"
   local ublock="$ext_dir/uBlock0@raymondhill.net.xpi"
+  local bitwarden="$ext_dir/{446900e4-71c2-419f-a6a7-df9c091e268b}.xpi"
   run mkdir -p "$ext_dir"
 
-  [[ -f "$ublock" ]] && { log "uBlock Origin already installed."; return 0; }
-  log "Installing uBlock Origin..."
-  run curl -sSL -o "$ublock" "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi"
-  log "uBlock Origin will activate on next Firefox launch."
+  if [[ ! -f "$ublock" ]]; then
+    log "Installing uBlock Origin..."
+    run curl -sSL -o "$ublock" "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi"
+    log "uBlock Origin will activate on next Firefox launch."
+  else
+    log "uBlock Origin already installed."
+  fi
+
+  if [[ ! -f "$bitwarden" ]]; then
+    log "Installing Bitwarden..."
+    run curl -sSL -o "$bitwarden" "https://addons.mozilla.org/firefox/downloads/latest/bitwarden-password-manager/latest.xpi"
+    log "Bitwarden will activate on next Firefox launch."
+  else
+    log "Bitwarden already installed."
+  fi
 }
 
 configure_dev_folder() {
@@ -439,6 +453,36 @@ configure_dev_folder() {
   [[ -d "$dir" ]] && { log "~/Documents/dev already exists."; return 0; }
   log "Creating ~/Documents/dev..."
   run mkdir -p "$dir"
+}
+
+configure_ai_skills_dirs() {
+  log "Creating AI agent skills directories..."
+  for dir in \
+    "$HOME/.copilot/skills" \
+    "$HOME/.claude/skills" \
+    "$HOME/.agents/skills"; do
+    if [[ -d "$dir" ]]; then
+      log "$dir already exists — skipping."
+    else
+      log "Creating $dir..."
+      run mkdir -p "$dir"
+    fi
+  done
+}
+
+install_claude_code() {
+  if command -v claude >/dev/null 2>&1; then
+    log "Claude Code already installed — skipping."
+    return 0
+  fi
+
+  if ! command -v npm >/dev/null 2>&1; then
+    log "npm not found — skipping Claude Code install."
+    return 0
+  fi
+
+  log "Installing Claude Code..."
+  run npm install -g @anthropic-ai/claude-code
 }
 
 configure_eza() {
@@ -1043,6 +1087,8 @@ main() {
   configure_ssh_key
   install_firefox_extensions
   configure_dev_folder
+  configure_ai_skills_dirs
+  install_claude_code
 
   # ── macOS preferences ──────────────────────────────────────────────────────
   configure_finder

@@ -1,4 +1,4 @@
-# mac-rebuild
+# mac-reforge
 
 A single bash script to set up a brand new Mac — installs all your apps and CLI tools, configures git, and applies a full set of sensible macOS system preferences. Fully automated.
 
@@ -7,7 +7,7 @@ A single bash script to set up a brand new Mac — installs all your apps and CL
 ## Usage
 
 ```bash
-cd mac-rebuild
+cd mac-reforge
 chmod +x setup.sh
 ./setup.sh
 ```
@@ -55,6 +55,7 @@ DRY_RUN=1 ./setup.sh
 | [jq](https://jqlang.github.io/jq/) | Parse and query JSON in the terminal |
 | [kubectl](https://kubernetes.io/docs/reference/kubectl/) | Kubernetes CLI |
 | [ncdu](https://dev.yorhel.nl/ncdu) | Disk usage visualizer in the terminal |
+| [node](https://nodejs.org/) | Node.js runtime + npm |
 | [python](https://www.python.org/) | Python 3 runtime + `pip3` |
 | [ripgrep](https://github.com/BurntSushi/ripgrep) | Extremely fast grep replacement (`rg`) |
 | [tree](http://mama.indstate.edu/users/ice/tree/) | Display folder structure as a tree |
@@ -70,6 +71,7 @@ Automatically installed into your Firefox profile on first run:
 
 | Extension | Description |
 |-----------|-------------|
+| [Bitwarden](https://bitwarden.com/) | Open-source password manager |
 | [uBlock Origin](https://ublockorigin.com/) | Best-in-class ad and tracker blocker |
 
 The script launches Firefox headlessly to create the profile, then drops the extension `.xpi` file directly into the `extensions/` folder. It activates the next time you open Firefox — no manual steps needed.
@@ -126,6 +128,30 @@ The script also writes the following settings to `~/Library/Application Support/
 | `terminal.external.osxExec` | `Terminal.app` |
 
 Opens the built-in macOS Terminal when you use **Terminal → New External Terminal** (`⇧⌃C`) in VS Code.
+
+---
+
+## Claude Code
+
+[Claude Code](https://docs.anthropic.com/en/docs/claude-code) is Anthropic's AI coding agent for the terminal. The script installs it globally via npm:
+
+```bash
+npm install -g @anthropic-ai/claude-code
+```
+
+Skipped automatically if `claude` is already in your PATH.
+
+---
+
+## AI agent skills directories
+
+The script creates these directories if they don't already exist:
+
+| Path | Used by |
+|------|---------|
+| `~/.copilot/skills` | GitHub Copilot CLI |
+| `~/.claude/skills` | Claude Code |
+| `~/.agents/skills` | General agent tooling |
 
 ---
 
@@ -319,11 +345,13 @@ The script opens System Settings automatically and waits for you to confirm befo
 12. Installs **MesloLGS Nerd Font**
 13. Installs **VS Code extensions**; sets macOS Terminal as external terminal
 14. Generates an **SSH key** (ed25519) and adds it to the macOS Keychain
-15. Installs Firefox extensions (uBlock Origin)
+15. Installs Firefox extensions (uBlock Origin, Bitwarden)
 16. Creates `~/Documents/dev`
-17. Applies all macOS system preferences (Finder → Transmission)
-18. Configures macOS Terminal — UTF-8, Pro theme, MesloLGS Nerd Font
-19. Disables Gatekeeper
+17. Creates AI agent skills directories (`~/.copilot/skills`, `~/.claude/skills`, `~/.agents/skills`)
+18. Installs **Claude Code** globally via npm
+19. Applies all macOS system preferences (Finder → Transmission)
+20. Configures macOS Terminal — UTF-8, Pro theme, MesloLGS Nerd Font
+21. Disables Gatekeeper
 
 ---
 
