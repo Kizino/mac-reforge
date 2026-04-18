@@ -546,13 +546,8 @@ install_claude_code() {
     return 0
   fi
 
-  if ! command -v npm >/dev/null 2>&1; then
-    log "npm not found — skipping Claude Code install."
-    return 0
-  fi
-
   log "Installing Claude Code..."
-  run npm install -g @anthropic-ai/claude-code
+  run brew install --cask claude-code
 }
 
 configure_eza() {

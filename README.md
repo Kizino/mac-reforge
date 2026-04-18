@@ -157,10 +157,10 @@ brew install anomalyco/tap/opencode
 
 ## Claude Code
 
-[Claude Code](https://docs.anthropic.com/en/docs/claude-code) is Anthropic's AI coding agent for the terminal. The script installs it globally via npm:
+[Claude Code](https://docs.anthropic.com/en/docs/claude-code) is Anthropic's AI coding agent for the terminal. The script installs it via Homebrew Cask:
 
 ```bash
-npm install -g @anthropic-ai/claude-code
+brew install --cask claude-code
 ```
 
 Skipped automatically if `claude` is already in your PATH.
@@ -383,7 +383,7 @@ The script opens System Settings automatically and waits for you to confirm befo
 16. Creates `~/Documents/dev`
 17. Creates AI agent skills directories (`~/.copilot/skills`, `~/.claude/skills`, `~/.agents/skills`)
 18. Clones **Obsidian skills** (`kepano/obsidian-skills`) into `~/.copilot/skills/`
-19. Installs **Claude Code** globally via npm
+19. Installs **Claude Code** via Homebrew Cask (`brew install --cask claude-code`)
 20. Applies all macOS system preferences (Finder → Transmission)
 21. Configures macOS Terminal — UTF-8, Pro theme, MesloLGS Nerd Font
 22. Disables Gatekeeper
