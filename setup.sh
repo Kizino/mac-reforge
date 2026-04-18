@@ -514,21 +514,22 @@ configure_ai_skills_dirs() {
 }
 
 install_obsidian_skills() {
-  local dest="$HOME/.copilot/skills/obsidian-skills"
+  local dest="$HOME/.agents/obsidian-skills"
 
   if [[ -d "$dest/.git" ]]; then
     log "Obsidian skills already installed — pulling latest..."
     run git -C "$dest" pull --ff-only
   else
-    log "Installing Obsidian skills for Copilot CLI..."
-    run mkdir -p "$HOME/.copilot/skills"
+    log "Installing Obsidian skills into ~/.agents/..."
+    run mkdir -p "$HOME/.agents"
     run git clone https://github.com/kepano/obsidian-skills.git "$dest"
   fi
 
-  # Copilot CLI expects skills at the flat level ~/.copilot/skills/<skill-name>/
-  # The repo nests them under obsidian-skills/skills/ — create symlinks to fix that.
-  log "Linking Obsidian skills into ~/.copilot/skills/..."
-  local skills_root="$HOME/.copilot/skills"
+  # Copilot CLI expects skills at the flat level — the repo nests them under
+  # obsidian-skills/skills/ — create symlinks at ~/.agents/skills/<skill-name>/ to fix that.
+  log "Linking Obsidian skills into ~/.agents/skills/..."
+  local skills_root="$HOME/.agents/skills"
+  run mkdir -p "$skills_root"
   for skill_dir in "$dest/skills"/*/; do
     local skill_name
     skill_name=$(basename "$skill_dir")
